@@ -2,7 +2,6 @@
 #https://andymcdonaldgeo.medium.com/uploading-and-reading-files-with-streamlit-92885ac3a1b6 st.fileuploaderの詳細説明
 
 import streamlit as st
-#from llama_index import download_loader
 import pandas as pd
 import os
 import openai
