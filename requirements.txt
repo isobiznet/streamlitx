@@ -3,3 +3,4 @@ pypdf
 python-dotenv
 meilisearch
 streamlit
+pandas
