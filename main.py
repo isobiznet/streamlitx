@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 import meilisearch
 import pandas as pd
 
-
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")  # OpenAIのAPIキーを設定します。
 meili_search_key =os.getenv("MEILI_SEARCHONLY_KEY") # meilisearch検索キーを設定します。
