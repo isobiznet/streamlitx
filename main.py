@@ -1,6 +1,6 @@
 import streamlit as st
 import json
-import openai
+from openai import OpenAI
 import os
 from dotenv import load_dotenv
 import meilisearch
@@ -11,6 +11,10 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")  # OpenAIのAPIキーを設定します。
 meili_search_key =os.getenv("MEILI_SEARCHONLY_KEY") # meilisearch検索キーを設定します。
 meili_url =os.getenv("MEILI_URL") # meilisearchへのURLを設定します。
+
+client = OpenAI(
+    api_key = openai.api_key,)
+
 
 def init_page():
     st.set_page_config(
@@ -42,7 +46,7 @@ def select_db():
     #st.sidebar.write(st.session_state.db_name) #データ確認用
 
 def get_keyword_call(searchword):
-    completion = openai.completions.create(
+    completion = client.chat.completions.create(
     model="gpt-3.5-turbo",
     messages=[
     {"role": "system", "content": "入力された文のキーワードのみを抽出し結果のみを表示せよ。結果は半角スペースで区切ること。"},
@@ -116,7 +120,7 @@ def main():
     message_placeholder = st.empty()
     full_response = ""
 
-    for completion2 in openai.completions.create(
+    for completion2 in client.chat.completions.create(
     model="gpt-4-1106-preview", #gpt-3.5-turbo-16k
     messages=[
     {"role": "system", "content": "あなたは「ISOの専門家」です。userからの質問に答えるために、以下の制約条件から最高の要約を出力してください。"},
