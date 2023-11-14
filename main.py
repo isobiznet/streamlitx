@@ -121,7 +121,7 @@ def main():
     message_placeholder = st.empty()
     full_response = ""
 
-    for completion2 in client.chat.completions.create(
+    stream = client.chat.completions.create(
     model="gpt-4-1106-preview", #gpt-3.5-turbo-16k
     messages=[
     {"role": "system", "content": "あなたは「ISOの専門家」です。userからの質問に答えるために、以下の制約条件から最高の要約を出力してください。"},
@@ -152,11 +152,15 @@ def main():
   ],
   temperature = 0.2,
   stream=True
-):
-        full_response += completion2.choices[0].delta.get("content", "")
-        message_placeholder.markdown(full_response + " ")
-    
-    message_placeholder.markdown(full_response)
+)
+
+for part in stream:
+    if hasattr(part.choices[0].delta, 'content'):
+        full_response += part.choices[0].delta.content
+    else:
+        full_response += ""
+
+    message_placeholder.markdown(full_response + " ")
 
 
 
