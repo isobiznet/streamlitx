@@ -119,9 +119,9 @@ def main():
     )
 
     for part in result_stream:
-    content = part.choices[0].delta.content if part.choices[0].delta.content is not None else ""
-    full_response += content
-    message_placeholder.markdown(full_response + " ")
+        content = part.choices[0].delta.content if part.choices[0].delta.content is not None else ""
+        full_response += content
+        message_placeholder.markdown(full_response + " ")
 
 
 if __name__ == '__main__':
