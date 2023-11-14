@@ -119,12 +119,10 @@ def main():
     )
 
     for part in result_stream:
-        if hasattr(part.choices[0].delta, 'content'):
-            full_response += part.choices[0].delta.content
-        else:
-            full_response += ""
+    content = part.choices[0].delta.content if part.choices[0].delta.content is not None else ""
+    full_response += content
+    message_placeholder.markdown(full_response + " ")
 
-        message_placeholder.markdown(full_response + " ")
 
 if __name__ == '__main__':
     main()
