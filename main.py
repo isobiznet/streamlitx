@@ -121,7 +121,7 @@ def main():
     message_placeholder = st.empty()
     full_response = ""
 
-    stream = client.chat.completions.create(
+    result_stream = client.chat.completions.create(
     model="gpt-4-1106-preview", #gpt-3.5-turbo-16k
     messages=[
     {"role": "system", "content": "あなたは「ISOの専門家」です。userからの質問に答えるために、以下の制約条件から最高の要約を出力してください。"},
@@ -154,7 +154,7 @@ def main():
   stream=True
 )
 
-for part in stream:
+for part in  result_stream:
     if hasattr(part.choices[0].delta, 'content'):
         full_response += part.choices[0].delta.content
     else:
