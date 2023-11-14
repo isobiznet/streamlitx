@@ -42,7 +42,7 @@ def select_db():
     #st.sidebar.write(st.session_state.db_name) #データ確認用
 
 def get_keyword_call(searchword):
-    completion = openai.ChatCompletion.create(
+    completion = openai.completions.create(
     model="gpt-3.5-turbo",
     messages=[
     {"role": "system", "content": "入力された文のキーワードのみを抽出し結果のみを表示せよ。結果は半角スペースで区切ること。"},
@@ -116,7 +116,7 @@ def main():
     message_placeholder = st.empty()
     full_response = ""
 
-    for completion2 in openai.ChatCompletion.create(
+    for completion2 in openai.completions.create(
     model="gpt-4-1106-preview", #gpt-3.5-turbo-16k
     messages=[
     {"role": "system", "content": "あなたは「ISOの専門家」です。userからの質問に答えるために、以下の制約条件から最高の要約を出力してください。"},
