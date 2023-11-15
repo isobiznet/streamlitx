@@ -7,11 +7,11 @@ from dotenv import load_dotenv
 import meilisearch
 import pandas as pd
 
-# 環境変数の読み込み
+
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")  # OpenAIのAPIキーを設定
-meili_search_key = os.getenv("MEILI_SEARCHONLY_KEY") # Meilisearch検索キーを設定
-meili_url = os.getenv("MEILI_URL") # MeilisearchのURLを設定
+openai.api_key = os.getenv("OPENAI_API_KEY")  # OpenAIのAPIキーを設定します。
+meili_search_key =os.getenv("MEILI_SEARCHONLY_KEY") # meilisearch検索キーを設定します。
+meili_url =os.getenv("MEILI_URL") # meilisearchへのURLを設定します。
 
 # OpenAIクライアントの初期化
 client = OpenAI(api_key=openai.api_key)
@@ -23,88 +23,100 @@ def init_page():
         layout="wide",
         initial_sidebar_state="auto", 
         menu_items={
-            'Get Help': 'https://www.google.com',
-            'Report a bug': "https://www.google.com",
-            'About': """
-            # ISMS Auditor Assistant
-            登録されたデータベースから検索し、AIに解説させます。
-            """
-        }
+         'Get Help': 'https://www.google.com',
+         'Report a bug': "https://www.google.com",
+         'About': """
+         # ISMS Auditor Assistant
+         登録されたデータベースから検索し、AIに解説させます。
+         """
+     }
     )
     st.sidebar.title("DB選択")
-
+    
+    
 def select_db():
     model = st.sidebar.radio("選択したDBから検索します:", 
-    ("ISMS系", "認定系", "全データ"), captions=["27000,27001,27002検索", "17021,27006,一部のMD検索", "すべてのデータから検索"])
+    ( "ISMS系", "認定系", "全データ"),captions = ["27000,27001,27002検索", "17021,27006,一部のMD検索", "すべてのデータから検索"])
     if model == "ISMS系":
-        st.session_state.db_name = "isms"
+        st.session_state.db_name = "= isms"
     elif model == "認定系":
-        st.session_state.db_name = "accreditation"
+        st.session_state.db_name = "= accreditation"
     else:
-        st.session_state.db_name = "data"
+        st.session_state.db_name = "EXISTS"
+    #meilisearchのfilter設定
 
 def get_keyword_call(searchword):
     completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "入力された文のキーワードのみを抽出し結果のみを表示せよ。結果は半角スペースで区切ること。"},
-            {"role": "user", "content": searchword}
-        ]
-    )
+    model="gpt-3.5-turbo",
+    messages=[
+    {"role": "system", "content": "入力された文のキーワードのみを抽出し結果のみを表示せよ。結果は半角スペースで区切ること。"},
+    {"role": "user", "content": searchword}
+  ])
     
     keyword = completion.choices[0].message.content
     return keyword
+    
 
 def meilisearch_call(searchword):
     client = meilisearch.Client(meili_url, meili_search_key)
-    search_result = client.index(st.session_state.db_name).search(searchword, {
-        'limit': 5,
-        'attributesToSearchOn': ['standard', 'clause', 'title', 'content_ja', 'keyword', 'reference'],
-        'attributesToRetrieve': ['standard', 'clause', 'title', 'content_ja', 'reference'],
-        'showRankingScore': True
-    })
+    search_result = client.index('data').search(searchword, {
+  'limit': 5,
+  'attributesToSearchOn': ['standard','clause','title', 'content_ja','keyword','reference'],
+  'attributesToRetrieve': ['standard','clause','title', 'content_ja','reference'],
+  #'attributesToHighlight': ['clause','title','content_ja'],
+  #'highlightPreTag': '<span class="highlight">',
+  #'highlightPostTag': '</span>',
+  'filter': f'category_sub {st.session_state.db_name}',
+  'showRankingScore': True})
 
-    df = pd.DataFrame(search_result) # dataframeにインプット
-    df = df.drop(['query', 'processingTimeMs', 'estimatedTotalHits', 'limit', 'offset'], axis=1) # いらない列を消去
+    df =pd.DataFrame(search_result) #dataframeにインプット
+
+    df =df.drop(['query','processingTimeMs','estimatedTotalHits','limit','offset'], axis=1) #いらない列を消去
     s = df.stack() # hits順に並び替え
-    df = pd.json_normalize(s) # ノーマライズ
+    df=pd.json_normalize(s) #ノーマライズ
     return df
+
 
 def main():
     init_page()
+
     st.title("ISMS Auditor Assistant")
-    select_db() # サイドバーでの選択肢
+    select_db() #サイドバーでの選択肢
 
-    searchword = st.text_input('**検索内容を入力:**', "", placeholder="脅威インテリジェンスとは?")
-    if not searchword: # 空欄の場合の判定
-        st.warning('検索内容を入力してください。')
+    searchword = st.text_input('❓**質問を入力:**', "", placeholder="脅威インテリジェンスとはどういうものか?")
+    if not searchword: #空欄の場合の判定
+        st.warning('質問内容を入力してください。')
         st.stop()
-
+    
     st.divider()
 
     try:
         keyword_result = get_keyword_call(searchword)
-        meili_search_result = meilisearch_call(keyword_result)
-        st.write('**DB一致内容:**')
-        st.dataframe(meili_search_result, 
-            column_config={
-                "standard": "規格",
-                "clause": "箇条",
-                "title": "表題",
-                "content_ja": "内容",
-                "_rankingScore": "一致率",
-            },
-            hide_index=True,
-        )
-    except Exception as e:
-        st.write(f"Error: {str(e)}")
+        #st.write(keyword_result)
     
+        meili_search_result = meilisearch_call(keyword_result)
+        st.write('📜**参照されたデータ:**')
+        st.dataframe(meili_search_result, 
+                 column_config={
+                     "standard": "規格",
+                     "clause": "箇条",
+                     "title": "表題",
+                     "clause": "箇条",
+                     "content_ja": "内容",
+                     "_rankingScore": "一致率",
+                     },
+                     hide_index=True,
+                     )
+    except Exception as e:
+        st.write(f"Error:{str(e)}")
+        
     st.divider()
 
     json_str = meili_search_result.to_json()
-    data = json.loads(json_str)
+    data = json.loads(json_str) #デシリアライズがおかしい?一応いけているが…
+    #st.write(data) #データ確認用
 
-    st.write("**AI解説:**")
+    st.write("💻**AI解説:**")
     message_placeholder = st.empty()
     full_response = ""
 
@@ -137,10 +149,9 @@ def main():
 
 """}
   ],
-        temperature=0.2,
-        stream=True
-    )
-
+  temperature = 0.2,
+  stream=True
+)
     for part in result_stream:
         content = part.choices[0].delta.content if part.choices[0].delta.content is not None else ""
         full_response += content
