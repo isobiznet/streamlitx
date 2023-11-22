@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 import meilisearch
 import pandas as pd
 
-
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")  # OpenAIのAPIキーを設定します。
 meili_search_key =os.getenv("MEILI_SEARCHONLY_KEY") # meilisearch検索キーを設定します。
@@ -79,6 +78,14 @@ def meilisearch_call(searchword):
 
 def main():
     init_page()
+    #streamlit humberger&footer message非表示
+    hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
 
     st.title("ISMS Auditor Assistant")
     select_db() #サイドバーでの選択肢
@@ -103,20 +110,22 @@ def main():
                      "title": "表題",
                      "clause": "箇条",
                      "content_ja": "内容",
+                     "reference": None,
                      "_rankingScore": "一致率",
                      },
                      hide_index=True,
                      )
     except Exception as e:
         st.write(f"Error:{str(e)}")
-        
+    
+    st.markdown(''':gray[*JIS規格全文は日本産業標準調査会 (https://www.jisc.go.jp/) で閲覧可能です。]''')    
     st.divider()
 
     json_str = meili_search_result.to_json()
     data = json.loads(json_str) #デシリアライズがおかしい?一応いけているが…
     #st.write(data) #データ確認用
 
-    st.write("💻**AI解説:**")
+    st. markdown("💻**AI解説:**")
     message_placeholder = st.empty()
     full_response = ""
 
@@ -156,6 +165,7 @@ def main():
         content = part.choices[0].delta.content if part.choices[0].delta.content is not None else ""
         full_response += content
         message_placeholder.markdown(full_response + " ")
+
 
 
 if __name__ == '__main__':
