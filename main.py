@@ -46,7 +46,7 @@ def select_db():
 
 def get_keyword_call(searchword):
     completion = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="gpt-3.5-turbo-0125",
     messages=[
     {"role": "system", "content": "入力された文のキーワードのみを抽出し結果のみを表示せよ。結果は半角スペースで区切ること。"},
     {"role": "user", "content": searchword}
@@ -130,7 +130,7 @@ def main():
     full_response = ""
 
     result_stream = client.chat.completions.create(
-        model="gpt-4-1106-preview",
+        model="gpt-4o",#gpt-4-1106-preview
         messages=[
     {"role": "system", "content": "あなたは「ISOの専門家」です。userからの質問に答えるために、以下の制約条件から最高の要約を出力してください。"},
     {"role": "user", "content": f"""
